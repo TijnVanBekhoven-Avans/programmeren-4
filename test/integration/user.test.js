@@ -60,4 +60,87 @@ describe('TC-20x user', () => {
             })
         })
     })
+    describe('TC-202 Retrieve users', () => {
+        it('TC-202-1 Show all users (minimum of two)', (done) => {
+            chai
+            .request(server)
+            .get('/api/user')
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(200)
+                res.body.should.have.property('message')
+                res.body.should.have.property('data').to.not.be.empty
+                let { users } = res.body.data
+                users.should.be.an('Array')
+                done()
+            })
+        })
+    })
+    describe('TC-203 Get user info', () => {
+        it('TC-203-2 User has logged in with valid token', (done) => {
+            chai
+            .request(server)
+            .get('/api/user/profile')
+            .send(
+                {
+                    
+                }
+            )
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(501)
+                res.body.should.have.property('message').to.be.equal('Functionality has yet be realised')
+                res.body.should.have.property('data').to.be.empty
+                done()
+            })
+        })
+    })
+    describe('TC-204 Get user details by id', () => {
+        it('TC-204-3 User exists', (done) => {
+            chai
+            .request(server)
+            .get('/api/user/1')
+            .send(
+                {
+                    
+                }
+            )
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(200)
+                res.body.should.have.property('message')
+                res.body.should.have.property('data').to.not.be.empty
+                let { id, firstName, lastName, street, city, isActive, emailAddress, password, phoneNumber } = res.body.data
+                id.should.be.a('number')
+                firstName.should.be.a('string')
+                lastName.should.be.a('string')
+                street.should.be.a('string')
+                city.should.be.a('string')
+                isActive.should.be.a('boolean')
+                emailAddress.should.be.a('string')
+                password.should.be.a('string')
+                phoneNumber.should.be.a('string')
+                done()
+            })
+        })
+    })
+    describe('TC-206 Delete user by id', () => {
+        it('TC-206-4 User is deleted succesfully', (done) => {
+            chai
+            .request(server)
+            .delete('/api/user/1')
+            .send(
+                {
+                    
+                }
+            )
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(200)
+                res.body.should.have.property('message')
+                res.body.should.have.property('data').to.be.empty
+                done()
+            })
+        })
+    })
 })
