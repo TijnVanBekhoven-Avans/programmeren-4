@@ -18,7 +18,8 @@
   },
   "homepage": "https://github.com/TijnVanBekhoven-Avans/programmeren-4#readme",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "mysql2": "^3.2.4"
   },
   "devDependencies": {
     "chai": "^4.3.7",
