@@ -47,12 +47,13 @@ describe('TC-20x user', () => {
                 res.body.should.have.property('status').to.be.equal(201)
                 res.body.should.have.property('message')
                 res.body.should.have.property('data').to.not.be.empty
-                let { id, firstName, lastName, street, city, emailAddress, password, phoneNumber } = res.body.data
+                let { id, firstName, lastName, street, city, isActive, emailAddress, password, phoneNumber } = res.body.data
                 id.should.be.a('number')
                 firstName.should.be.a('string').to.be.equal('John')
                 lastName.should.be.a('string').to.be.equal('Doe')
                 street.should.be.a('string').to.be.equal('Lovensdijkstraat 61')
                 city.should.be.a('string').to.be.equal('Breda')
+                isActive.should.be.a('boolean').to.be.equal(true)
                 emailAddress.should.be.a('string').to.be.equal('j.doe@server.com')
                 password.should.be.a('string').to.be.equal('secret')
                 phoneNumber.should.be.a('string').to.be.equal('06 12345678')
