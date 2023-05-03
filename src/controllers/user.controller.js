@@ -1,5 +1,6 @@
-const database = require('../util/database')
+const database = require('../util/json.database')
 const assert = require('assert')
+const pool = require('../util/sql.database')
 
 const userController = {
     registerUser: (req, res) => {
@@ -67,7 +68,7 @@ const userController = {
         }
     },
     
-    getAllUsers: (req, res) => {
+    getAllUsers: (req, res, next) => {
         let firstNameFilter = req.query.firstName
         let lastNameFilter = req.query.lastName
         let streetFilter = req.query.street
@@ -75,44 +76,91 @@ const userController = {
         let isActiveFilter = req.query.isActive
         let emailAddressFilter = req.query.emailAddress
         let phoneNumberFilter = req.query.phoneNumber
+
+        let sqlStatement = 'SELECT * FROM `user`'
     
-        let filteredUsers = database.users
+        filter = []
         if (firstNameFilter) {
-            filteredUsers = filteredUsers.filter((item) => item.firstName == firstNameFilter)
+            filter[filter.length] = firstNameFilter
+            sqlStatement = sqlStatement.concat(' WHERE `firstName` = ?')
         }
         if (lastNameFilter) {
-            filteredUsers = filteredUsers.filter((item) => item.lastName == lastNameFilter)
+            filter[filter.length] = lastNameFilter
+            if (filter.length > 1) {
+                sqlStatement = sqlStatement.concat(' AND `lastName` = ?')
+            } else {
+                sqlStatement = sqlStatement.concat(' WHERE `lastName` = ?')
+            }
         }
         if (streetFilter) {
-            filteredUsers = filteredUsers.filter((item) => item.street == streetFilter)
+            filter[filter.length] = streetFilter
+            if (filter.length > 1) {
+                sqlStatement = sqlStatement.concat(' AND `street` = ?')
+            } else {
+                sqlStatement = sqlStatement.concat(' WHERE `street` = ?')
+            }
         }
         if (cityFilter) {
-            filteredUsers = filteredUsers.filter((item) => item.city == cityFilter)
+            filter[filter.length] = cityFilter
+            if (filter.length > 1) {
+                sqlStatement = sqlStatement.concat(' AND `city` = ?')
+            } else {
+                sqlStatement = sqlStatement.concat(' WHERE `city` = ?')
+            }
         }
         if (isActiveFilter) {
-            if (isActiveFilter === 'true') {
-                isActiveFilter = true
-            } else if (isActiveFilter === 'false') {
-                isActiveFilter = false
+            filter[filter.length] = isActiveFilter
+            if (filter.length > 1) {
+                sqlStatement = sqlStatement.concat(' AND `isActive` = ?')
+            } else {
+                sqlStatement = sqlStatement.concat(' WHERE `isActive` = ?')
             }
-            filteredUsers = filteredUsers.filter((item) => item.isActive == isActiveFilter)
         }
         if (emailAddressFilter) {
-            filteredUsers = filteredUsers.filter((item) => item.emailAddress == emailAddressFilter)
+            filter[filter.length] = emailAddressFilter
+            if (filter.length > 1) {
+                sqlStatement = sqlStatement.concat(' AND `emailAddress` = ?')
+            } else {
+                sqlStatement = sqlStatement.concat(' WHERE `emailAddress` = ?')
+            }
         }
         if (phoneNumberFilter) {
-            filteredUsers = filteredUsers.filter((item) => item.phoneNumber == phoneNumberFilter)
-        }
-    
-        res.status(200).json(
-            {
-                status: 200,
-                message: `Users successfully retrieved`,
-                data: {
-                    users: filteredUsers
-                }
+            filter[filter.length] = phoneNumberFilter
+            if (filter.length > 1) {
+                sqlStatement = sqlStatement.concat(' AND `phoneNumber` = ?')
+            } else {
+                sqlStatement = sqlStatement.concat(' WHERE `phoneNumber` = ?')
             }
-        )
+        }
+
+        pool.getConnection(function (err, conn) {
+            if (err) {
+                console.log('error', err)
+                next('error: ' + err.message)
+            }
+            if (conn) {
+                conn.execute(sqlStatement, 
+                filter,
+                function (err, results, fields) {
+                    if (err) {
+                        // logger.err(err.message)
+                        next({
+                            code: 409,
+                            message: err.message
+                        })
+                    }
+                    if (results) {
+                        // logger.info('Found', results.length, 'results')
+                        res.status(200).json({
+                            status: 200,
+                            message: 'Users successfully retrieved',
+                            data: results
+                        })
+                    }
+                })
+                pool.releaseConnection(conn)
+            }
+        })
     },
 
     getUserProfile: (req, res) => {

@@ -71,8 +71,7 @@ describe('TC-20x user', () => {
                 res.body.should.have.property('status').to.be.equal(200)
                 res.body.should.have.property('message')
                 res.body.should.have.property('data').to.not.be.empty
-                let { users } = res.body.data
-                users.should.be.an('Array')
+                res.body.data.should.be.an('Array')
                 done()
             })
         })
