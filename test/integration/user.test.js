@@ -27,7 +27,7 @@ chai.use(chaiHttp)
 //     })
 // })
 
-describe.skip('TC-20x user', () => {
+describe('TC-20x user', () => {
     describe('TC-201 Register a new user', () => {
         it('TC-201-1 Required field is missing', (done) => {
             chai
