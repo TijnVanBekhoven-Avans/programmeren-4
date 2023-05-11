@@ -45,6 +45,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(400)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()
             })
@@ -66,6 +67,7 @@ describe('TC-20x user', () => {
                     res.body.should.be.an('object')
                     res.body.should.have.property('status').to.be.equal(400)
                     res.body.should.have.property('message')
+                    res.body.message.should.be.a('string')
                     res.body.should.have.property('data').to.be.empty
                     done()
                 })
@@ -85,6 +87,7 @@ describe('TC-20x user', () => {
                         res.body.should.be.an('object')
                         res.body.should.have.property('status').to.be.equal(400)
                         res.body.should.have.property('message')
+                        res.body.message.should.be.a('string')
                         res.body.should.have.property('data').to.be.empty
                         done()
                     })
@@ -105,6 +108,7 @@ describe('TC-20x user', () => {
                         res.body.should.be.an('object')
                         res.body.should.have.property('status').to.be.equal(400)
                         res.body.should.have.property('message')
+                        res.body.message.should.be.a('string')
                         res.body.should.have.property('data').to.be.empty
                         done()
                     })
@@ -127,6 +131,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(400)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()
             })
@@ -150,6 +155,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(201)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.not.be.empty
                 let { id, firstName, lastName, street, city, isActive, emailAddress, password, phoneNumber } = res.body.data
                 id.should.be.a('number')
@@ -181,6 +187,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(403)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()
             })
@@ -195,6 +202,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(200)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.not.be.empty
                 res.body.data.should.be.an('Array')
                 done()
@@ -211,6 +219,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(200)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.not.be.empty
                 done()
             })
@@ -226,6 +235,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(200)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.not.be.empty
                 res.body.data.should.be.an('Array')
                 done()
@@ -242,6 +252,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(200)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.not.be.empty
                 res.body.data.should.be.an('Array')
                 done()
@@ -271,6 +282,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(404)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()
             })
@@ -288,6 +300,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(200)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.not.be.empty
                 let { id, firstName, lastName, street, city, isActive, emailAddress, password, phoneNumber } = res.body.data
                 id.should.be.a('number')
@@ -317,6 +330,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(400)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()
             })
@@ -335,6 +349,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(400)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()
             })
@@ -353,6 +368,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(404)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()
             })
@@ -367,6 +383,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(404)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()
             })
@@ -379,6 +396,7 @@ describe('TC-20x user', () => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(200)
                 res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()
             })
