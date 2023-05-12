@@ -13,6 +13,20 @@ app.use('/', (req, res, next) => {
     next()
 })
 
+app.get('/api/user', (req, res) => {
+    res.status(200).json(
+        {
+            status: 200,
+            message: 'Server info-endpoint',
+            data: {
+                studentName: 'Tijn van Bekhoven',
+                studentNumber: 2195786,
+                description: 'Welcome to the share a meal API.'
+            }
+        }
+    )
+})
+
 app.use('/api/user', userRoutes)
 
 // Catch not existing routes
