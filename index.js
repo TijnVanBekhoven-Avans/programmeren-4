@@ -13,7 +13,7 @@ app.use('/', (req, res, next) => {
     next()
 })
 
-app.get('/api/user', (req, res) => {
+app.get('/api/info', (req, res) => {
     res.status(200).json(
         {
             status: 200,
