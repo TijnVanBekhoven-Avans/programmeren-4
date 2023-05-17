@@ -1,5 +1,6 @@
 const express = require('express')
 const userRoutes = require('./src/routes/user.routes')
+const authRoutes = require('./src/routes/auth.routes')
 
 const app = express();
 const port = process.env.PORT || 3000
@@ -28,6 +29,7 @@ app.get('/api/info', (req, res) => {
 })
 
 app.use('/api/user', userRoutes)
+app.use('/api', authRoutes)
 
 // Catch not existing routes
 app.use('*', (req, res) => {
