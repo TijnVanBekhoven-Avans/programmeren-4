@@ -42,8 +42,6 @@ const authController = {
                                         jwtSecretKey,
                                         { expiresIn: '2d' },
                                         (err, token) => {
-                                            console.log('token: ' + token)
-
                                             let user = results[0]
                                             user.token = token
 
@@ -79,7 +77,38 @@ const authController = {
                 }
             )
         }
-    } 
+    },
+
+    validateToken: (req, res, next) => {
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader) {
+            next(
+                {
+                    code: 401,
+                    message: 'Authorization header missing'
+                }
+            )
+        } else {
+            // Strip the word 'Bearer ' from the token
+            const token = authHeader.substring(7, authHeader.length)
+
+            jwt.verify(token, jwtSecretKey, (err, payload) => {
+                if (err) {
+                    next(
+                        {
+                            code: 401,
+                            message: 'Not authorised'
+                        }
+                    )
+                }
+                if (payload) {
+                    req.userId = payload.userId
+                    next()
+                }
+            })
+        }
+    }
 }
 
 module.exports = authController

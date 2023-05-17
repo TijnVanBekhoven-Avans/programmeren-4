@@ -42,6 +42,15 @@ app.use('*', (req, res) => {
     )
 })
 
+// Express error handler
+app.use((err, req, res, next) => {
+    res.status(err.code).json({
+        status: err.code,
+        message: err.message,
+        data: {}
+    });
+});
+
 // Listen to http requests
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)
