@@ -3,7 +3,23 @@ const chaiHttp = require('chai-http')
 const server = require('../../index')
 const pool = require('../../src/util/sql.database')
 
+const CLEAR_USER = 'DELETE IGNORE FROM `user`;'
+const CLEAR_MEAL = 'DELETE IGNORE FROM `meal`;'
+const CLEAR_DB = CLEAR_USER + CLEAR_MEAL
+
 describe('TC-101-x Login', () => {
+    before((done) => {
+        pool.getConnection((err, conn) => {
+            if (conn) {
+                conn.query(CLEAR_DB, (err, results, fields) => {})
+
+                conn.query('INSERT INTO `user` (`firstName`, `lastName`, `emailAddress`, `password`, `phoneNumber`, `street`, `city`) VALUES (?, ?, ?, ?, ?, ?, ?)', [ 'John', 'Doe', 'j.doe@server.com', 'Secret123', '06 12345678', 'street', 'city' ] , (err, results, fields) => {})
+            }
+            conn.release()
+        })
+        done()
+    })
+
     describe('TC-101-1-x Required field is missing', () => {
         it('TC-101-1-1 Password is missing', (done) => {
             chai

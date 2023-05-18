@@ -45,6 +45,12 @@ const authController = {
                                             let user = results[0]
                                             user.token = token
 
+                                            if (user.isActive === 1) {
+                                                user.isActive = true;
+                                            } else if (user.isActive === 0) {
+                                                user.isActive = false;
+                                            }
+
                                             res.status(200).json(
                                                 {
                                                     status: 200,

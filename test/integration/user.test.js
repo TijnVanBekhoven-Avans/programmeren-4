@@ -8,26 +8,21 @@ const pool = require('../../src/util/sql.database')
 chai.should()
 chai.use(chaiHttp)
 
-// const CLEAR_MEAL_TABLE = 'DELETE IGNORE FROM `meal`'
-// const CLEAR_USER_TABLE = 'DELETE IGNORE FROM `user`'
-// const CLEAR_DB = CLEAR_MEAL_TABLE + CLEAR_USER_TABLE
+const CLEAR_USER = 'DELETE IGNORE FROM `user`;'
+const CLEAR_MEAL = 'DELETE IGNORE FROM `meal`;'
+const CLEAR_DB = CLEAR_USER + CLEAR_MEAL
 
-// describe('hook', () => {
-//     before((done) => {
-//         pool.getConnection((err, conn) => {
-//             if (conn) {
-//                 conn.query(CLEAR_DB)
-//                 console.log('Database cleared')
-//                 conn.query(
-//                     'INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAddress`, `password`, `street`, `city`) VALUES (1, "John", "Doe", "j.doe@domain.com", "Secret123", "", "")'
-//                 )
-//             }
-//         })
-//         done()
-//     })
-// })
+describe('TC-20x user', () => {
+    before((done) => {
+        pool.getConnection((err, conn) => {
+            if (conn) {
+                conn.query(CLEAR_DB, (err, results, fields) => {})
+            }
+            conn.release()
+        })
+        done()
+    })
 
-describe.skip('TC-20x user', () => {
     describe('TC-201 Register a new user', () => {
         it('TC-201-1 Required field is missing', (done) => {
             chai
@@ -165,7 +160,7 @@ describe.skip('TC-20x user', () => {
                 city.should.be.a('string').to.be.equal('Breda')
                 isActive.should.be.a('boolean').to.be.equal(true)
                 emailAddress.should.be.a('string').to.be.equal('j.doe@server.com')
-                password.should.be.a('string').to.be.equal('secret')
+                password.should.be.a('string').to.be.equal('Secret123')
                 phoneNumber.should.be.a('string').to.be.equal('06 12345678')
                 done()
             })
@@ -290,7 +285,7 @@ describe.skip('TC-20x user', () => {
         it('TC-204-3 User exists', (done) => {
             chai
             .request(server)
-            .get('/api/user/1')
+            .get('/api/user/2')
             .send(
                 {
                     
@@ -391,7 +386,7 @@ describe.skip('TC-20x user', () => {
         it('TC-206-4 User is deleted succesfully', (done) => {
             chai
             .request(server)
-            .delete('/api/user/1')
+            .delete('/api/user/2')
             .end((err, res) => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(200)
