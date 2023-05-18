@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const userController = require('../controllers/user.controller')
+const authController = require('../controllers/authentication.controller')
 
 // POST request to register a new user (UC-201)
 router.post('', userController.registerUser)
@@ -9,7 +10,7 @@ router.post('', userController.registerUser)
 router.get('', userController.getAllUsers)
 
 // GET request to retrieve user profile (UC-203)
-router.get('/profile', userController.getUserProfile)
+router.get('/profile', authController.validateToken, userController.getUserProfile)
 
 // GET request to retrieve user by id (UC-204)
 router.get('/:userId', userController.getUser)

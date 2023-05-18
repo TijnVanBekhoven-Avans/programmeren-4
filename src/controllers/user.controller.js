@@ -207,13 +207,40 @@ const userController = {
     },
 
     getUserProfile: (req, res) => {
-        res.status(501).json(
-            {
-                status: 501,
-                message: 'Functionality has yet be realised',
-                data: {}
-            }
-        )
+        let sqlStatement = 'SELECT * FROM `user` WHERE `id` = ?'
+
+        pool.getConnection((err, conn) => {
+            conn.execute(
+                sqlStatement,
+                [ req.userId ],
+                (err, results, fields) => {
+                    if (err) {
+                        next(
+                            {
+                                code: 500,
+                                message: err.message
+                            }
+                        )
+                    }
+                    if (results) {
+                        let user = results[0]
+                        if (user.isActive === 1) {
+                            user.isActive = true
+                        } else if (user.isActive === 0) {
+                            user.isActive = false
+                        }
+
+                        res.status(200).json(
+                            {
+                                status: 200,
+                                message: `User ${req.userId} successfully retrieved`,
+                                data: user
+                            }
+                        )
+                    }
+                }
+            )
+        })
     },
 
     getUser: (req, res, next) => {

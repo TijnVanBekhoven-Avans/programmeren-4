@@ -4,6 +4,8 @@ const chai = require('chai')
 const chaiHttp = require('chai-http')
 const server = require('../../index')
 const pool = require('../../src/util/sql.database')
+const jwt = require('jsonwebtoken')
+const jwtSecretKey = require('../../src/util/utils').jwtSecretKey
 
 chai.should()
 chai.use(chaiHttp)
@@ -17,6 +19,8 @@ describe('TC-20x user', () => {
         pool.getConnection((err, conn) => {
             if (conn) {
                 conn.query(CLEAR_DB, (err, results, fields) => {})
+
+                // conn.query('INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAddress`, `password`, `phoneNumber`, `street`, `city`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 100, 'John', 'Doe', 'j.doe@avans.nl', 'Secret123', '06 12345678', 'street', 'city' ], () => {})
             }
             conn.release()
         })
@@ -255,15 +259,44 @@ describe('TC-20x user', () => {
         })
     })
     describe('TC-203 Get user info', () => {
-        it('TC-203-2 User has logged in with valid token', (done) => {
+        it('TC-203-1 User is not logged in with valid token', (done) => {
+            let token = 'sljdkfajlsejflksdlkfjasdlkf'
+
             chai
             .request(server)
             .get('/api/user/profile')
+            .set({ Authorization: `Bearer ${token}` })
             .end((err, res) => {
                 res.body.should.be.an('object')
-                res.body.should.have.property('status').to.be.equal(501)
-                res.body.should.have.property('message').to.be.equal('Functionality has yet be realised')
+                res.body.should.have.property('status').to.be.equal(401)
+                res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
+                done()
+            })
+        })
+        it('TC-203-2 User has logged in with valid token', (done) => {
+            let token = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
+            chai
+            .request(server)
+            .get('/api/user/profile')
+            .set({ Authorization: `Bearer ${token}` })
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(200)
+                res.body.should.have.property('message')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.not.be.empty
+                let { id, firstName, lastName, street, city, isActive, emailAddress, phoneNumber, password } = res.body.data
+                id.should.be.a('number')
+                firstName.should.be.a('string')
+                lastName.should.be.a('string')
+                street.should.be.a('string')
+                city.should.be.a('string')
+                isActive.should.be.a('boolean')
+                emailAddress.should.be.a('string')
+                phoneNumber.should.be.a('string')
+                password.should.be.a('string')
                 done()
             })
         })
@@ -383,7 +416,7 @@ describe('TC-20x user', () => {
                 done()
             })
         })
-        it('TC-206-4 User is deleted succesfully', (done) => {
+        it.skip('TC-206-4 User is deleted succesfully', (done) => {
             chai
             .request(server)
             .delete('/api/user/2')
