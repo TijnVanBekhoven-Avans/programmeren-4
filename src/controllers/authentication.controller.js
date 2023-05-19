@@ -109,8 +109,29 @@ const authController = {
                     )
                 }
                 if (payload) {
-                    req.userId = payload.userId
-                    next()
+                    pool.getConnection((err, conn) => {
+                        conn.execute(
+                            'SELECT * FROM `user` WHERE `id` = ?',
+                            [ payload.userId ],
+                            (err, results, fields) => {
+                                if (err) {
+                                    next({
+                                        code: 401,
+                                        message: 'Not authorised'
+                                    })
+                                }
+                                if (results && results[0]) {
+                                    req.userId = payload.userId
+                                    next()
+                                } else {
+                                    next({
+                                        code: 401,
+                                        message: 'Not authorised'
+                                    })
+                                }
+                            }
+                        )
+                    })
                 }
             })
         }

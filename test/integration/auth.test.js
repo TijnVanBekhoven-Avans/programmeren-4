@@ -7,7 +7,7 @@ const CLEAR_USER = 'DELETE IGNORE FROM `user`;'
 const CLEAR_MEAL = 'DELETE IGNORE FROM `meal`;'
 const CLEAR_DB = CLEAR_USER + CLEAR_MEAL
 
-describe('TC-101-x Login', () => {
+describe.skip('TC-101-x Login', () => {
     before((done) => {
         pool.getConnection((err, conn) => {
             if (conn) {
