@@ -7,7 +7,8 @@ const jwtSecretKey = require('../../src/util/utils').jwtSecretKey
 
 const CLEAR_USER = 'DELETE IGNORE FROM `user`;'
 const CLEAR_MEAL = 'DELETE IGNORE FROM `meal`;'
-const CLEAR_DB = CLEAR_USER + CLEAR_MEAL
+const CLEAR_PARTICIPANTS = 'DELETE IGNORE FROM `meal_participants_user`;'
+const CLEAR_DB = CLEAR_USER + CLEAR_MEAL + CLEAR_PARTICIPANTS
 
 describe('TC-30x Meal', () => {
     before((done) => {
@@ -15,7 +16,11 @@ describe('TC-30x Meal', () => {
             if (conn) {
                 conn.query(CLEAR_DB, (err, results, fields) => {})
 
+                // Add users
                 conn.query('INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAddress`, `password`, `phoneNumber`, `street`, `city`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 2, 'John', 'Doe', 'j.doe@server.com', 'Secret123', '06 12345678', 'street', 'city' ] , (err, results, fields) => {})
+                
+                // Add meals
+                conn.query('INSERT INTO `meal` (`id`, `name`, `description`, `price`, `dateTime`, `maxAmountOfParticipants`, `imageUrl`, cookId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 1, 'Pizza', 'Very nice pizza', 2.50, '2023-05-19T05:40:20.000Z', 5, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Pizza-3007395.jpg/800px-Pizza-3007395.jpg',2 ], (err, results, fields) => {})
             }
             conn.release()
         })
@@ -253,6 +258,47 @@ describe('TC-30x Meal', () => {
                     isActive.should.be.a('boolean').to.be.equal(true)
                     emailAddress.should.be.a('string').to.be.equal('j.doe@server.com')
                     password.should.be.a('string').to.be.equal('Secret123')
+                    phoneNumber.should.be.a('string').to.be.equal('06 12345678')
+                    street.should.be.a('string').to.be.equal('street')
+                    city.should.be.a('string').to.be.equal('city')
+                }
+                done()
+            })
+        })
+    })
+
+    describe('TC-303-x Get all meals', () => {
+        it('TC-303-1 List of meals returned', (done) => {
+            chai
+            .request(server)
+            .get('/api/meal')
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(200)
+                res.body.should.have.property('message').to.be.equal('All meals have been retrieved successfully')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.not.be.empty
+                let { id, name, description, isActive, isVega, isVegan, isToTakeHome, maxAmountOfParticipants, price, imageUrl, allergenes, cook, participants } = res.body.data[0]
+                id.should.be.a('number').to.be.equal(1)
+                name.should.be.a('string').to.be.equal('Pizza')
+                description.should.be.a('string').to.be.equal('Very nice pizza')
+                isActive.should.be.a('boolean').to.be.equal(false)
+                isVega.should.be.a('boolean').to.be.equal(false)
+                isVegan.should.be.a('boolean').to.be.equal(false)
+                isToTakeHome.should.be.a('boolean').to.be.equal(true)
+                maxAmountOfParticipants.should.be.a('number').to.be.equal(5)
+                price.should.be.a('number').to.be.equal(2.50)
+                imageUrl.should.be.a('string').to.be.equal('https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Pizza-3007395.jpg/800px-Pizza-3007395.jpg')
+                allergenes.should.be.a('string').to.be.equal('')
+                participants.should.be.an('Array').to.be.empty
+                cook.should.be.an('object')
+                {
+                    let { id, firstName, lastName, isActive, emailAddress, password, phoneNumber, street, city } = cook
+                    id.should.be.a('number').to.be.equal(2)
+                    firstName.should.be.a('string').to.be.equal('John')
+                    lastName.should.be.a('string').to.be.equal('Doe')
+                    isActive.should.be.a('boolean').to.be.equal(true)
+                    emailAddress.should.be.a('string').to.be.equal('j.doe@server.com')
                     phoneNumber.should.be.a('string').to.be.equal('06 12345678')
                     street.should.be.a('string').to.be.equal('street')
                     city.should.be.a('string').to.be.equal('city')

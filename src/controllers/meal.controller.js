@@ -50,7 +50,7 @@ const mealController = {
                                     (cookErr, cookResults, cookFields) => {
                                         if (cookErr) {
                                             next({
-                                                code: 501,
+                                                code: 500,
                                                 message: err.message
                                             })
                                         }
@@ -90,6 +90,114 @@ const mealController = {
                 }
             )
         }
+    },
+
+    getMeals: (req, res, next) => {
+        pool.getConnection((err, conn) => {
+            if (err) {
+                next({
+                    code: 500,
+                    message: err.message
+                })
+            }
+            if (conn) {
+                let meals
+
+                conn.execute(
+                    'SELECT * FROM `meal`',
+                    (err, results, fields) => {
+                        if (err) {
+                            next({
+                                code: 403,
+                                message: err.message
+                            })
+                        }
+                        if (results) {
+                            meals = results
+
+                            for (let i = 0; i < meals.length; i++) {
+                                let cook
+                                let participants = []
+
+                                conn.execute(
+                                    'SELECT * FROM `user` WHERE `id` = ?',
+                                    [ meals[i].cookId ],
+                                    (err, results, fields) => {
+                                        if (err) {
+                                            next({
+                                                code: 403,
+                                                message: err.message
+                                            })
+                                        }
+                                        if (results) {
+                                            cook = results[0]
+                                            cook.isActive = convertToBoolean(cook.isActive)
+                                            cook.password = undefined
+                                            meals[i].cook = cook
+                                        }
+                                    }
+                                )
+
+                                conn.execute(
+                                    'SELECT * FROM `meal_participants_user` WHERE mealId = ?',
+                                    [ meals[i].id ],
+                                    (err, results, fields) => {
+                                        if (err) {
+                                            next({
+                                                code: 403,
+                                                message: err.message
+                                            })
+                                        }
+                                        if (results) {
+                                            let participantIds = results
+
+                                            for (let j = 0; j < participantIds.length; j++) {
+                                                let participant
+
+                                                conn.execute(
+                                                    'SELECT * FROM `user` WHERE id = ?',
+                                                    [ participantIds[j].userId ],
+                                                    (err, results, fields) => {
+                                                        if (err) {
+                                                            next({
+                                                                code: 403,
+                                                                message: err.message
+                                                            })
+                                                        }
+                                                        if (results)  {
+                                                            participant = results[0]
+                                                            participant.isActive = convertToBoolean(participant.isActive)
+                                                            participant.password = undefined
+                                                            participants[participants.length] = participant
+                                                        }
+                                                    }
+                                                )
+                                            }
+
+                                            meals[i].participants = participants
+                                        }
+                                    }
+                                )
+
+                                meals[i].isActive = convertToBoolean(meals[i].isActive)
+                                meals[i].isVega = convertToBoolean(meals[i].isVega)
+                                meals[i].isVegan = convertToBoolean(meals[i].isVegan)
+                                meals[i].isToTakeHome = convertToBoolean(meals[i].isToTakeHome)
+                                meals[i].price = Number(meals[i].price)
+                            }
+
+                            setTimeout(() => {
+                                res.status(200).json({
+                                    status: 200,
+                                    message: 'All meals have been retrieved successfully',
+                                    data: meals
+                                })
+                            }, 100)
+                        }
+                    }
+                )
+            }
+        })
     }
 }
 

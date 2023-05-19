@@ -9,6 +9,7 @@ router.post('', authController.validateToken, mealController.createMeal)
 // PUT request to edit meal (UC-302)
 
 // GET request to get all meals (UC-303)
+router.get('', mealController.getMeals)
 
 // GET request to get a meal (UC-304)
 
