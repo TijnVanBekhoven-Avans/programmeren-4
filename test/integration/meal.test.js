@@ -10,7 +10,9 @@ const CLEAR_MEAL = 'DELETE IGNORE FROM `meal`;'
 const CLEAR_PARTICIPANTS = 'DELETE IGNORE FROM `meal_participants_user`;'
 const CLEAR_DB = CLEAR_USER + CLEAR_MEAL + CLEAR_PARTICIPANTS
 
-describe('TC-30x Meal', () => {
+describe('TC-30x Meal', function () {
+    this.timeout(3000)
+
     before((done) => {
         pool.getConnection((err, conn) => {
             if (conn) {
@@ -18,9 +20,11 @@ describe('TC-30x Meal', () => {
 
                 // Add users
                 conn.query('INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAddress`, `password`, `phoneNumber`, `street`, `city`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 2, 'John', 'Doe', 'j.doe@server.com', 'Secret123', '06 12345678', 'street', 'city' ] , (err, results, fields) => {})
+                conn.query('INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAddress`, `password`, `phoneNumber`, `street`, `city`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 3, 'John', 'Roe', 'j.roe@server.com', 'Secret123', '06 12345678', 'street', 'city' ] , (err, results, fields) => {})
                 
                 // Add meals
-                conn.query('INSERT INTO `meal` (`id`, `name`, `description`, `price`, `dateTime`, `maxAmountOfParticipants`, `imageUrl`, cookId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 1, 'Pizza', 'Very nice pizza', 2.50, '2023-05-19T05:40:20.000Z', 5, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Pizza-3007395.jpg/800px-Pizza-3007395.jpg',2 ], (err, results, fields) => {})
+                conn.query('INSERT INTO `meal` (`id`, `name`, `description`, `price`, `dateTime`, `maxAmountOfParticipants`, `imageUrl`, cookId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 1, 'Pizza', 'Very nice pizza', 2.50, '2023-05-19T05:40:20.000Z', 5, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Pizza-3007395.jpg/800px-Pizza-3007395.jpg', 2 ], (err, results, fields) => {})
+                conn.query('INSERT INTO `meal` (`id`, `name`, `description`, `price`, `dateTime`, `maxAmountOfParticipants`, `imageUrl`, cookId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 2, 'Pesto', 'Very nice pesto', 2.50, '2023-05-19T05:40:20.000Z', 5, 'https://www.eefkooktzo.nl/wp-content/uploads/2021/03/Pesto-maken.jpg', 3 ], (err, results, fields) => {})
             }
             conn.release()
         })
@@ -307,4 +311,86 @@ describe('TC-30x Meal', () => {
             })
         })
     })
+
+    describe('TC-305-x Delete meal', () => {
+        describe('TC-305-1 User not logged in', () => {
+            it('TC-305-1 No token included', (done) => {
+                chai
+                .request(server)
+                .delete('/api/meal/1')
+                .end((err, res) => {
+                    res.body.should.be.an('object')
+                    res.body.should.have.property('status').to.be.equal(401)
+                    res.body.should.have.property('message').to.be.equal('Authorization header missing')
+                    res.body.message.should.be.a('string')
+                    res.body.should.have.property('data').to.be.empty
+                    done()
+                })
+            })
+            it('TC-305-1 Invalid token', (done) => {
+                let token = 'sdfasdfsefasdfasdf'
+
+                chai
+                .request(server)
+                .delete('/api/meal/1')
+                .set({ Authorization: `Bearer ${token}` })
+                .end((err, res) => {
+                    res.body.should.be.an('object')
+                    res.body.should.have.property('status').to.be.equal(401)
+                    res.body.should.have.property('message').to.be.equal('Not authorised')
+                    res.body.message.should.be.a('string')
+                    res.body.should.have.property('data').to.be.empty
+                    done()
+                })
+            })
+        })
+        it.skip('TC-305-2 Not the owner', (done) => {
+            let token = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
+
+            chai
+            .request(server)
+            .delete('/api/meal/2')
+            .set({ Authorization: `Bearer ${token}` })
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(403)
+                res.body.should.have.property('message').to.be.equal('Not authorised')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.be.empty
+                done()
+            })
+        })
+        it.skip('TC-305-3 Meal not found', (done) => {
+            let token = jwt.sign({ userId: 3 }, jwtSecretKey, { expiresIn: '2d' })
+
+            chai
+            .request(server)
+            .delete('/api/meal/10000')
+            .set({ Authorization: `Bearer ${token}` })
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(404)
+                res.body.should.have.property('message').to.be.equal('Meal not found')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.be.empty
+                done()
+            })
+        })
+        it('TC-305-3 Meal deleted successfully', () => {
+            let token = jwt.sign({ userId: 3 }, jwtSecretKey, { expiresIn: '2d' })
+
+            chai
+            .request(server)
+            .delete('/api/meal/2')
+            .set({ Authorization: `Bearer ${token}` })
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(200)
+                res.body.should.have.property('message').to.be.equal('Meal not found')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.be.empty
+                done()
+            })
+        })
+    }) 
 })

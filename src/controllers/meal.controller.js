@@ -198,6 +198,67 @@ const mealController = {
                 )
             }
         })
+    },
+
+    deleteMeal: (req, res, next) => {
+        pool.getConnection((err, conn) => {
+            if (err) {
+                next({
+                    code: 500,
+                    message: err.message
+                })
+            }
+            if (conn) {
+                mealId = req.params.mealId
+                userId = req.userId
+
+                conn.execute(
+                    'SELECT * FROM `meal` WHERE id = ?',
+                    [ mealId ],
+                    (err, results, fields) => {
+                        if (err) {
+                            next({
+                                code: 500,
+                                message: err.message
+                            })
+                        }
+                        if (results) {
+                            if (results[0]) {
+                                if (results[0].cookId === userId) {
+                                    conn.execute(
+                                        'DELETE FROM `meal` WHERE id = ?',
+                                        [ mealId ],
+                                        (err, results, fields) => {
+                                            if (err) {
+                                                next({
+                                                    code: 500,
+                                                    message: err.message
+                                                })
+                                            } else {
+                                                next({
+                                                    code: 200,
+                                                    message: `Meal ${mealId} is deleted successfully`
+                                                })
+                                            }
+                                        }
+                                    )
+                                } else {
+                                    next({
+                                        code: 403,
+                                        message: 'Not authorised'
+                                    })
+                                }
+                            } else {
+                                next({
+                                    code: 404,
+                                    message: 'Meal not found'
+                                })
+                            }
+                        }
+                    }
+                )
+            }
+        })
     }
 }
 
