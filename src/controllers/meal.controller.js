@@ -200,6 +200,117 @@ const mealController = {
         })
     },
 
+    getMeal: (req, res, next) => {
+        pool.getConnection((err, conn) => {
+            if (err) {
+                next({
+                    code: 500,
+                    message: err.message
+                })
+            }
+            if (conn) {
+                let mealId = req.params.mealId
+
+                conn.execute(
+                    'SELECT * FROM `meal` WHERE id = ?',
+                    [ mealId ],
+                    (err, results, fields) => {
+                        if (err) {
+                            next({
+                                code: 403,
+                                message: err.message
+                            })
+                        }
+                        if (results) {
+                            if (results[0]) {
+                                meal = results[0]
+                                meal.isActive = convertToBoolean(meal.isActive)
+                                meal.isVega = convertToBoolean(meal.isVega)
+                                meal.isVegan = convertToBoolean(meal.isVegan)
+                                meal.isToTakeHome = convertToBoolean(meal.isToTakeHome)
+                                meal.price = Number(meal.price)
+
+                                conn.execute(
+                                    'SELECT * FROM `user` WHERE id = ?',
+                                    [ meal.cookId ],
+                                    (err, results, fields) => {
+                                        if (err) {
+                                            next({
+                                                code: 403,
+                                                message: err.message
+                                            })
+                                        }
+                                        if (results) {
+                                            meal.cookId = undefined
+                                            meal.cook = results[0]
+                                            meal.cook.isActive = convertToBoolean(meal.cook.isActive)
+                                            meal.cook.password = undefined
+                                            participants = []
+
+                                            conn.execute(
+                                                'SELECT * FROM `meal_participants_user` WHERE mealId = ?',
+                                                [ meal.id ],
+                                                (err, results, fields) => {
+                                                    if (err) {
+                                                        next({
+                                                            code: 403,
+                                                            message: err.message
+                                                        })
+                                                    }
+                                                    if (results) {
+                                                        let participantIds = results
+            
+                                                        for (let j = 0; j < participantIds.length; j++) {
+                                                            let participant
+            
+                                                            conn.execute(
+                                                                'SELECT * FROM `user` WHERE id = ?',
+                                                                [ participantIds[j].userId ],
+                                                                (err, results, fields) => {
+                                                                    if (err) {
+                                                                        next({
+                                                                            code: 403,
+                                                                            message: err.message
+                                                                        })
+                                                                    }
+                                                                    if (results)  {
+                                                                        participant = results[0]
+                                                                        participant.isActive = convertToBoolean(participant.isActive)
+                                                                        participant.password = undefined
+                                                                        participants[participants.length] = participant
+                                                                    }
+                                                                }
+                                                            )
+                                                        }
+            
+                                                        meal.participants = participants
+                                                    }
+                                                }
+                                            )
+
+                                            setTimeout(() => {
+                                                res.status(200).json({
+                                                    status: 200,
+                                                    message: 'Meal has been found',
+                                                    data: meal
+                                                })
+                                            }, 100)
+                                        }
+                                    }
+                                )
+                            } else {
+                                next({
+                                    code: 404,
+                                    message: 'Meal not found'
+                                })
+                            }
+                        }
+                    }
+                )
+            }
+        })
+    },
+
     deleteMeal: (req, res, next) => {
         pool.getConnection((err, conn) => {
             if (err) {

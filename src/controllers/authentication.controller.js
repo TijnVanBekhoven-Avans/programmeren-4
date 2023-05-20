@@ -110,6 +110,7 @@ const authController = {
                 }
                 if (payload) {
                     pool.getConnection((err, conn) => {
+                        console.log('Hi mom!')
                         conn.execute(
                             'SELECT * FROM `user` WHERE `id` = ?',
                             [ payload.userId ],
@@ -131,6 +132,7 @@ const authController = {
                                 }
                             }
                         )
+                        pool.releaseConnection(conn)
                     })
                 }
             })

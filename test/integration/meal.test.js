@@ -10,6 +10,9 @@ const CLEAR_MEAL = 'DELETE IGNORE FROM `meal`;'
 const CLEAR_PARTICIPANTS = 'DELETE IGNORE FROM `meal_participants_user`;'
 const CLEAR_DB = CLEAR_USER + CLEAR_MEAL + CLEAR_PARTICIPANTS
 
+let token2
+let token3
+
 describe('TC-30x Meal', function () {
     this.timeout(3000)
 
@@ -25,21 +28,24 @@ describe('TC-30x Meal', function () {
                 // Add meals
                 conn.query('INSERT INTO `meal` (`id`, `name`, `description`, `price`, `dateTime`, `maxAmountOfParticipants`, `imageUrl`, cookId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 1, 'Pizza', 'Very nice pizza', 2.50, '2023-05-19T05:40:20.000Z', 5, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Pizza-3007395.jpg/800px-Pizza-3007395.jpg', 2 ], (err, results, fields) => {})
                 conn.query('INSERT INTO `meal` (`id`, `name`, `description`, `price`, `dateTime`, `maxAmountOfParticipants`, `imageUrl`, cookId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 2, 'Pesto', 'Very nice pesto', 2.50, '2023-05-19T05:40:20.000Z', 5, 'https://www.eefkooktzo.nl/wp-content/uploads/2021/03/Pesto-maken.jpg', 3 ], (err, results, fields) => {})
+
             }
             conn.release()
         })
+
+        // Set tokens
+        token2 = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
+        token3 = jwt.sign({ userId: 3 }, jwtSecretKey, { expiresIn: '2d' })
         done()
     })
 
     describe('TC-301-x Create new meal', () => {
         describe('TC-301-1 Required fields is missing', () => {
             it('TC-301-1 Name is missing', (done) => {
-                let token = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
-
                 chai
                 .request(server)
                 .post('/api/meal')
-                .set({ Authorization: `Bearer ${token}` })
+                .set({ Authorization: `Bearer ${token2}` })
                 .send({
                     description: 'Very nice pasta',
                     price: 2.50,
@@ -57,12 +63,10 @@ describe('TC-30x Meal', function () {
                 })
             })
             it('TC-301-1 Description is missing', (done) => {
-                let token = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
-
                 chai
                 .request(server)
                 .post('/api/meal')
-                .set({ Authorization: `Bearer ${token}` })
+                .set({ Authorization: `Bearer ${token2}` })
                 .send({
                     name: 'Pasta',
                     price: 2.50,
@@ -80,12 +84,10 @@ describe('TC-30x Meal', function () {
                 })
             })
             it('TC-301-1 Price is missing', (done) => {
-                let token = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
-
                 chai
                 .request(server)
                 .post('/api/meal')
-                .set({ Authorization: `Bearer ${token}` })
+                .set({ Authorization: `Bearer ${token2}` })
                 .send({
                     name: 'Pasta',
                     description: 'Very nice pasta',
@@ -103,12 +105,10 @@ describe('TC-30x Meal', function () {
                 })
             })
             it('TC-301-1 DateTime is missing', (done) => {
-                let token = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
-
                 chai
                 .request(server)
                 .post('/api/meal')
-                .set({ Authorization: `Bearer ${token}` })
+                .set({ Authorization: `Bearer ${token2}` })
                 .send({
                     name: 'Pasta',
                     description: 'Very nice pasta',
@@ -126,12 +126,10 @@ describe('TC-30x Meal', function () {
                 })
             })
             it('TC-301-1 MaxAmountOfParticipants is missing', (done) => {
-                let token = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
-
                 chai
                 .request(server)
                 .post('/api/meal')
-                .set({ Authorization: `Bearer ${token}` })
+                .set({ Authorization: `Bearer ${token2}` })
                 .send({
                     name: 'Pasta',
                     description: 'Very nice pasta',
@@ -149,12 +147,10 @@ describe('TC-30x Meal', function () {
                 })
             })
             it('TC-301-1 ImageUrl is missing', (done) => {
-                let token = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
-
                 chai
                 .request(server)
                 .post('/api/meal')
-                .set({ Authorization: `Bearer ${token}` })
+                .set({ Authorization: `Bearer ${token2}` })
                 .send({
                     name: 'Pasta',
                     description: 'Very nice pasta',
@@ -312,6 +308,59 @@ describe('TC-30x Meal', function () {
         })
     })
 
+    describe('TC-304-x Get meal by id', () => {
+        it('TC-304-1 Meal does not exist', () => {
+            chai
+            .request(server)
+            .get('/api/meal/10000', (done) => {
+                res.body.should.be.an('object')
+                    res.body.should.have.property('status').to.be.equal(404)
+                    res.body.should.have.property('message').to.be.equal('Meal not found')
+                    res.body.message.should.be.a('string')
+                    res.body.should.have.property('data').to.be.empty
+                    done()
+            })
+        })
+        it('TC-304-2 Meal has been retrieved successfully', (done) => {
+            chai
+            .request(server)
+            .get('/api/meal/1')
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(200)
+                res.body.should.have.property('message').to.be.equal('Meal has been found')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.not.be.empty
+                let { id, name, description, isActive, isVega, isVegan, isToTakeHome, maxAmountOfParticipants, price, imageUrl, allergenes, cook, participants } = res.body.data
+                id.should.be.a('number').to.be.equal(1)
+                name.should.be.a('string').to.be.equal('Pizza')
+                description.should.be.a('string').to.be.equal('Very nice pizza')
+                isActive.should.be.a('boolean').to.be.equal(false)
+                isVega.should.be.a('boolean').to.be.equal(false)
+                isVegan.should.be.a('boolean').to.be.equal(false)
+                isToTakeHome.should.be.a('boolean').to.be.equal(true)
+                maxAmountOfParticipants.should.be.a('number').to.be.equal(5)
+                price.should.be.a('number').to.be.equal(2.50)
+                imageUrl.should.be.a('string').to.be.equal('https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Pizza-3007395.jpg/800px-Pizza-3007395.jpg')
+                allergenes.should.be.a('string').to.be.equal('')
+                participants.should.be.an('Array').to.be.empty
+                cook.should.be.an('object')
+                {
+                    let { id, firstName, lastName, isActive, emailAddress, phoneNumber, street, city } = cook
+                    id.should.be.a('number').to.be.equal(2)
+                    firstName.should.be.a('string').to.be.equal('John')
+                    lastName.should.be.a('string').to.be.equal('Doe')
+                    isActive.should.be.a('boolean').to.be.equal(true)
+                    emailAddress.should.be.a('string').to.be.equal('j.doe@server.com')
+                    phoneNumber.should.be.a('string').to.be.equal('06 12345678')
+                    street.should.be.a('string').to.be.equal('street')
+                    city.should.be.a('string').to.be.equal('city')
+                }
+                done()
+            })
+        })
+    })
+
     describe('TC-305-x Delete meal', () => {
         describe('TC-305-1 User not logged in', () => {
             it('TC-305-1 No token included', (done) => {
@@ -344,13 +393,11 @@ describe('TC-30x Meal', function () {
                 })
             })
         })
-        it.skip('TC-305-2 Not the owner', (done) => {
-            let token = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
-
+        it('TC-305-2 Not the owner', (done) => {
             chai
             .request(server)
             .delete('/api/meal/2')
-            .set({ Authorization: `Bearer ${token}` })
+            .set({ Authorization: `Bearer ${token2}` })
             .end((err, res) => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(403)
@@ -360,13 +407,11 @@ describe('TC-30x Meal', function () {
                 done()
             })
         })
-        it.skip('TC-305-3 Meal not found', (done) => {
-            let token = jwt.sign({ userId: 3 }, jwtSecretKey, { expiresIn: '2d' })
-
+        it('TC-305-3 Meal not found', (done) => {
             chai
             .request(server)
             .delete('/api/meal/10000')
-            .set({ Authorization: `Bearer ${token}` })
+            .set({ Authorization: `Bearer ${token3}` })
             .end((err, res) => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(404)
@@ -376,17 +421,15 @@ describe('TC-30x Meal', function () {
                 done()
             })
         })
-        it('TC-305-3 Meal deleted successfully', () => {
-            let token = jwt.sign({ userId: 3 }, jwtSecretKey, { expiresIn: '2d' })
-
+        it('TC-305-4 Meal deleted successfully', (done) => {
             chai
             .request(server)
             .delete('/api/meal/2')
-            .set({ Authorization: `Bearer ${token}` })
+            .set({ Authorization: `Bearer ${token3}` })
             .end((err, res) => {
                 res.body.should.be.an('object')
                 res.body.should.have.property('status').to.be.equal(200)
-                res.body.should.have.property('message').to.be.equal('Meal not found')
+                res.body.should.have.property('message').to.be.equal('Meal 2 is deleted successfully')
                 res.body.message.should.be.a('string')
                 res.body.should.have.property('data').to.be.empty
                 done()

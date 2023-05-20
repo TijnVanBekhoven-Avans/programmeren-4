@@ -12,6 +12,7 @@ router.post('', authController.validateToken, mealController.createMeal)
 router.get('', mealController.getMeals)
 
 // GET request to get a meal (UC-304)
+router.get('/:mealId', mealController.getMeal)
 
 // DELETE request to delete a meal (UC-305)
 router.delete('/:mealId', authController.validateToken, mealController.deleteMeal)
