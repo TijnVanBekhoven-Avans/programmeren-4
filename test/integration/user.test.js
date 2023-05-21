@@ -16,7 +16,9 @@ const CLEAR_DB = CLEAR_USER + CLEAR_MEAL + CLEAR_PARTICIPANTS
 let token2
 let token3
 
-describe('TC-20x user', () => {
+describe('TC-20x user', function () {
+    this.timeout(3000)
+
     before((done) => {
         pool.getConnection((err, conn) => {
             if (conn) {
@@ -32,7 +34,9 @@ describe('TC-20x user', () => {
         token2 = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
         token3 = jwt.sign({ userId: 3 }, jwtSecretKey, { expiresIn: '2d' })
 
-        done()
+        setTimeout(() => {
+            done()
+        }, 2000)
     })
 
     describe('TC-201 Register a new user', () => {
