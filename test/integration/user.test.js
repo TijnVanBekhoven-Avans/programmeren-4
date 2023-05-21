@@ -38,176 +38,8 @@ describe('TC-20x user', function () {
             done()
         }, 2000)
     })
-
-    describe('TC-201 Register a new user', () => {
-        it('TC-201-1 Required field is missing', (done) => {
-            chai
-            .request(server)
-            .post('/api/user')
-            .send({
-                firstName: 'John',
-                lastName: 'Doe',
-                street: 'Lovensdijkstraat 61',
-                city: 'Breda',
-                emailAddress: 'j.doe@server.com',
-                password: 'Secret123'
-            })
-            .end((err, res) => {
-                res.body.should.be.an('object')
-                res.body.should.have.property('status').to.be.equal(400)
-                res.body.should.have.property('message').to.be.equal('AssertionError [ERR_ASSERTION]: phoneNumber must be a string')
-                res.body.message.should.be.a('string')
-                res.body.should.have.property('data').to.be.empty
-                done()
-            })
-        })
-        describe('TC-201-2-x Invalid emailAddress', () => {
-            it('TC-201-2-1 No prefix', (done) => {
-                chai
-                .request(server)
-                .post('/api/user')
-                .send({
-                    firstName: 'John',
-                    lastName: 'Doe',
-                    street: 'Lovensdijkstraat 61',
-                    city: 'Breda',
-                    emailAddress: '@server.com',
-                    phoneNumber: '06 12345678',
-                    password: 'Secret123'
-                })
-                .end((err, res) => {
-                    res.body.should.be.an('object')
-                    res.body.should.have.property('status').to.be.equal(400)
-                    res.body.should.have.property('message').to.be.equal('Error: EmailAddress is not valid')
-                    res.body.message.should.be.a('string')
-                    res.body.should.have.property('data').to.be.empty
-                    done()
-                })
-                it('TC-201-2-1 No domain', (done) => {
-                    chai
-                    .request(server)
-                    .post('/api/user')
-                    .send({
-                        firstName: 'John',
-                        lastName: 'Doe',
-                        street: 'Lovensdijkstraat 61',
-                        city: 'Breda',
-                        emailAddress: 'j.doe@.com',
-                        password: 'Secret123'
-                    })
-                    .end((err, res) => {
-                        res.body.should.be.an('object')
-                        res.body.should.have.property('status').to.be.equal(400)
-                        res.body.should.have.property('message').to.be.equal('AssertionError [ERR_ASSERTION]: emailAddress must be a string')
-                        res.body.message.should.be.a('string')
-                        res.body.should.have.property('data').to.be.empty
-                        done()
-                    })
-                })
-                it('TC-201-2-1 No suffix', (done) => {
-                    chai
-                    .request(server)
-                    .post('/api/user')
-                    .send({
-                        firstName: 'John',
-                        lastName: 'Doe',
-                        street: 'Lovensdijkstraat 61',
-                        city: 'Breda',
-                        emailAddress: 'j.doe@server',
-                        password: 'Secret123'
-                    })
-                    .end((err, res) => {
-                        res.body.should.be.an('object')
-                        res.body.should.have.property('status').to.be.equal(400)
-                        res.body.should.have.property('message').to.be.equal('AssertionError [ERR_ASSERTION]: emailAddress must be a string')
-                        res.body.message.should.be.a('string')
-                        res.body.should.have.property('data').to.be.empty
-                        done()
-                    })
-                })
-            })
-        })
-        it('TC-201-3 Invalid password ', (done) => {
-            chai
-            .request(server)
-            .post('/api/user')
-            .send({
-                firstName: 'John',
-                lastName: 'Doe',
-                street: 'Lovensdijkstraat 61',
-                city: 'Breda',
-                emailAddress: 'j.doe@server.com',
-                phoneNumber: '06 12345678',
-                password: 'secre'
-            })
-            .end((err, res) => {
-                res.body.should.be.an('object')
-                res.body.should.have.property('status').to.be.equal(400)
-                res.body.should.have.property('message').to.be.equal('Error: Password does not meet the minimum requirements')
-                res.body.message.should.be.a('string')
-                res.body.should.have.property('data').to.be.empty
-                done()
-            })
-        })
-        it('TC-201-4 User already exists', (done) => {
-            chai
-            .request(server)
-            .post('/api/user')
-            .send(
-                {
-                    firstName: 'John',
-                    lastName: 'Doe',
-                    street: 'Lovensdijkstraat 61',
-                    city: 'Breda',
-                    emailAddress: 'j.doe@server.com',
-                    password: 'Secret123',
-                    phoneNumber: '06 12345678'
-                }
-            )
-            .end((err, res) => {
-                res.body.should.be.an('object')
-                res.body.should.have.property('status').to.be.equal(403)
-                res.body.should.have.property('message').to.be.equal('EmailAddress is already in use')
-                res.body.message.should.be.a('string')
-                res.body.should.have.property('data').to.be.empty
-                done()
-            })
-        })
-        it('TC-201-5 User successfully registered', (done) => {
-            chai
-            .request(server)
-            .post('/api/user')
-            .send(
-                {
-                    firstName: 'John',
-                    lastName: 'Roe',
-                    street: 'Lovensdijkstraat 61',
-                    city: 'Breda',
-                    emailAddress: 'j.roe@server.com',
-                    password: 'Secret123',
-                    phoneNumber: '06 12345678'
-                }
-            )
-            .end((err, res) => {
-                res.body.should.be.an('object')
-                res.body.should.have.property('status').to.be.equal(201)
-                res.body.should.have.property('message').to.be.equal('User with id 4 successfully added')
-                res.body.message.should.be.a('string')
-                res.body.should.have.property('data').to.not.be.empty
-                let { id, firstName, lastName, street, city, isActive, emailAddress, password, phoneNumber } = res.body.data
-                id.should.be.a('number').to.be.equal(4)
-                firstName.should.be.a('string').to.be.equal('John')
-                lastName.should.be.a('string').to.be.equal('Roe')
-                street.should.be.a('string').to.be.equal('Lovensdijkstraat 61')
-                city.should.be.a('string').to.be.equal('Breda')
-                isActive.should.be.a('boolean').to.be.equal(true)
-                emailAddress.should.be.a('string').to.be.equal('j.roe@server.com')
-                password.should.be.a('string').to.be.equal('Secret123')
-                phoneNumber.should.be.a('string').to.be.equal('06 12345678')
-                done()
-            })
-        })
-    })
+    
+    
     describe('TC-202 Retrieve users', () => {
         it('TC-202-1 Show all users (minimum of two)', (done) => {
             chai
@@ -376,6 +208,175 @@ describe('TC-20x user', function () {
                     emailAddress.should.be.a('string').to.be.equal('j.joe@server.com')
                     phoneNumber.should.be.a('string').to.be.equal('06 12345678')
                 }
+                done()
+            })
+        })
+    })
+    describe('TC-201 Register a new user', () => {
+        it('TC-201-1 Required field is missing', (done) => {
+            chai
+            .request(server)
+            .post('/api/user')
+            .send({
+                firstName: 'John',
+                lastName: 'Doe',
+                street: 'Lovensdijkstraat 61',
+                city: 'Breda',
+                emailAddress: 'j.doe@server.com',
+                password: 'Secret123'
+            })
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(400)
+                res.body.should.have.property('message').to.be.equal('AssertionError [ERR_ASSERTION]: phoneNumber must be a string')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.be.empty
+                done()
+            })
+        })
+        describe('TC-201-2-x Invalid emailAddress', () => {
+            it('TC-201-2-1 No prefix', (done) => {
+                chai
+                .request(server)
+                .post('/api/user')
+                .send({
+                    firstName: 'John',
+                    lastName: 'Doe',
+                    street: 'Lovensdijkstraat 61',
+                    city: 'Breda',
+                    emailAddress: '@server.com',
+                    phoneNumber: '06 12345678',
+                    password: 'Secret123'
+                })
+                .end((err, res) => {
+                    res.body.should.be.an('object')
+                    res.body.should.have.property('status').to.be.equal(400)
+                    res.body.should.have.property('message').to.be.equal('Error: EmailAddress is not valid')
+                    res.body.message.should.be.a('string')
+                    res.body.should.have.property('data').to.be.empty
+                    done()
+                })
+                it('TC-201-2-1 No domain', (done) => {
+                    chai
+                    .request(server)
+                    .post('/api/user')
+                    .send({
+                        firstName: 'John',
+                        lastName: 'Doe',
+                        street: 'Lovensdijkstraat 61',
+                        city: 'Breda',
+                        emailAddress: 'j.doe@.com',
+                        password: 'Secret123'
+                    })
+                    .end((err, res) => {
+                        res.body.should.be.an('object')
+                        res.body.should.have.property('status').to.be.equal(400)
+                        res.body.should.have.property('message').to.be.equal('AssertionError [ERR_ASSERTION]: emailAddress must be a string')
+                        res.body.message.should.be.a('string')
+                        res.body.should.have.property('data').to.be.empty
+                        done()
+                    })
+                })
+                it('TC-201-2-1 No suffix', (done) => {
+                    chai
+                    .request(server)
+                    .post('/api/user')
+                    .send({
+                        firstName: 'John',
+                        lastName: 'Doe',
+                        street: 'Lovensdijkstraat 61',
+                        city: 'Breda',
+                        emailAddress: 'j.doe@server',
+                        password: 'Secret123'
+                    })
+                    .end((err, res) => {
+                        res.body.should.be.an('object')
+                        res.body.should.have.property('status').to.be.equal(400)
+                        res.body.should.have.property('message').to.be.equal('AssertionError [ERR_ASSERTION]: emailAddress must be a string')
+                        res.body.message.should.be.a('string')
+                        res.body.should.have.property('data').to.be.empty
+                        done()
+                    })
+                })
+            })
+        })
+        it('TC-201-3 Invalid password ', (done) => {
+            chai
+            .request(server)
+            .post('/api/user')
+            .send({
+                firstName: 'John',
+                lastName: 'Doe',
+                street: 'Lovensdijkstraat 61',
+                city: 'Breda',
+                emailAddress: 'j.doe@server.com',
+                phoneNumber: '06 12345678',
+                password: 'secre'
+            })
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(400)
+                res.body.should.have.property('message').to.be.equal('Error: Password does not meet the minimum requirements')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.be.empty
+                done()
+            })
+        })
+        it('TC-201-4 User already exists', (done) => {
+            chai
+            .request(server)
+            .post('/api/user')
+            .send(
+                {
+                    firstName: 'John',
+                    lastName: 'Doe',
+                    street: 'Lovensdijkstraat 61',
+                    city: 'Breda',
+                    emailAddress: 'j.doe@server.com',
+                    password: 'Secret123',
+                    phoneNumber: '06 12345678'
+                }
+            )
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(403)
+                res.body.should.have.property('message').to.be.equal('EmailAddress is already in use')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.be.empty
+                done()
+            })
+        })
+        it('TC-201-5 User successfully registered', (done) => {
+            chai
+            .request(server)
+            .post('/api/user')
+            .send(
+                {
+                    firstName: 'John',
+                    lastName: 'Roe',
+                    street: 'Lovensdijkstraat 61',
+                    city: 'Breda',
+                    emailAddress: 'j.roe@server.com',
+                    password: 'Secret123',
+                    phoneNumber: '06 12345678'
+                }
+            )
+            .end((err, res) => {
+                res.body.should.be.an('object')
+                res.body.should.have.property('status').to.be.equal(201)
+                res.body.should.have.property('message').to.be.equal('User with id 4 successfully added')
+                res.body.message.should.be.a('string')
+                res.body.should.have.property('data').to.not.be.empty
+                let { id, firstName, lastName, street, city, isActive, emailAddress, password, phoneNumber } = res.body.data
+                id.should.be.a('number').to.be.equal(4)
+                firstName.should.be.a('string').to.be.equal('John')
+                lastName.should.be.a('string').to.be.equal('Roe')
+                street.should.be.a('string').to.be.equal('Lovensdijkstraat 61')
+                city.should.be.a('string').to.be.equal('Breda')
+                isActive.should.be.a('boolean').to.be.equal(true)
+                emailAddress.should.be.a('string').to.be.equal('j.roe@server.com')
+                password.should.be.a('string').to.be.equal('Secret123')
+                phoneNumber.should.be.a('string').to.be.equal('06 12345678')
                 done()
             })
         })
