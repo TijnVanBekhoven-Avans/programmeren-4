@@ -35,11 +35,17 @@ describe('TC-30x Meal', function () {
                 
                 // Add meals
                 conn.query('INSERT INTO `meal` (`id`, `name`, `description`, `price`, `dateTime`, `maxAmountOfParticipants`, `imageUrl`, cookId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 1, 'Pizza', 'Very nice pizza', 2.50, '2023-05-19T05:40:20.000Z', 5, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Pizza-3007395.jpg/800px-Pizza-3007395.jpg', 2 ], (err, results, fields) => {
+                    if (err) {
+                        console.log(err.message)
+                    }
                     if (results) {
                         console.log('Testmeal 1 has been created')
                     }
                 })
                 conn.query('INSERT INTO `meal` (`id`, `name`, `description`, `price`, `dateTime`, `maxAmountOfParticipants`, `imageUrl`, cookId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 2, 'Pesto', 'Very nice pesto', 2.50, '2023-05-19T05:40:20.000Z', 5, 'https://www.eefkooktzo.nl/wp-content/uploads/2021/03/Pesto-maken.jpg', 3 ], (err, results, fields) => {
+                    if (err) {
+                        console.log(err.message)
+                    }
                     if (results) {
                         console.log('Testmeal 2 has been created')
                     }
