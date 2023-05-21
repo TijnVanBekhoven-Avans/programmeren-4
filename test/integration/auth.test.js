@@ -170,4 +170,14 @@ describe('TC-101-x Login', () => {
             done()
         })
     })
+
+    after((done) => {
+        pool.getConnection((err, conn) => {
+            if (conn) {
+                conn.query(CLEAR_DB, (err, results, fields) => {})
+            }
+            pool.releaseConnection(conn)
+        })
+        done()
+    })
 })

@@ -707,4 +707,14 @@ describe('TC-20x user', () => {
             })
         })
     })
+
+    after((done) => {
+        pool.getConnection((err, conn) => {
+            if (conn) {
+                conn.query(CLEAR_DB, (err, results, fields) => {})
+            }
+            pool.releaseConnection(conn)
+        })
+        done()
+    })
 })
