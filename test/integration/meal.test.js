@@ -58,10 +58,8 @@ describe('TC-30x Meal', function () {
         // Set tokens
         token2 = jwt.sign({ userId: 2 }, jwtSecretKey, { expiresIn: '2d' })
         token3 = jwt.sign({ userId: 3 }, jwtSecretKey, { expiresIn: '2d' })
-        
-        setTimeout(() => {
-            done()
-        }, 500)
+
+        done()
     })
 
     describe('TC-301-x Create new meal', () => {
