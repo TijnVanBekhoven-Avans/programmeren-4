@@ -79,6 +79,7 @@ const mealController = {
                             }
                         }
                     )
+                    pool.releaseConnection(conn)
                 }
             })
         } catch (err) {
@@ -192,11 +193,12 @@ const mealController = {
                                     message: 'All meals have been retrieved successfully',
                                     data: meals
                                 })
-                            }, 100)
+                            }, 50)
                         }
                     }
                 )
             }
+            pool.releaseConnection(conn)
         })
     },
 
@@ -294,7 +296,7 @@ const mealController = {
                                                     message: 'Meal has been found',
                                                     data: meal
                                                 })
-                                            }, 100)
+                                            }, 50)
                                         }
                                     }
                                 )
@@ -308,6 +310,7 @@ const mealController = {
                     }
                 )
             }
+            pool.releaseConnection(conn)
         })
     },
 
@@ -369,6 +372,7 @@ const mealController = {
                     }
                 )
             }
+            pool.releaseConnection(conn)
         })
     }
 }

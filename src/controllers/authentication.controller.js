@@ -72,6 +72,7 @@ const authController = {
                             } 
                         }
                     )
+                    pool.releaseConnection(conn)
                 }
             })
         } catch (err) {
@@ -110,7 +111,54 @@ const authController = {
                 }
                 if (payload) {
                     pool.getConnection((err, conn) => {
-                        console.log('Hi mom!')
+                        conn.execute(
+                            'SELECT * FROM `user` WHERE `id` = ?',
+                            [ payload.userId ],
+                            (err, results, fields) => {
+                                if (err) {
+                                    next({
+                                        code: 401,
+                                        message: 'Not authorised'
+                                    })
+                                }
+                                if (results && results[0]) {
+                                    req.userId = payload.userId
+                                    next()
+                                } else {
+                                    next({
+                                        code: 401,
+                                        message: 'Not authorised'
+                                    })
+                                }
+                            }
+                        )
+                        pool.releaseConnection(conn)
+                    })
+                }
+            })
+        }
+    },
+
+    validateTokenOptional: (req, res, next) => {
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader) {
+            next()
+        } else {
+            // Strip the word 'Bearer ' from the token
+            const token = authHeader.substring(7, authHeader.length)
+
+            jwt.verify(token, jwtSecretKey, (err, payload) => {
+                if (err) {
+                    next(
+                        {
+                            code: 401,
+                            message: 'Not authorised'
+                        }
+                    )
+                }
+                if (payload) {
+                    pool.getConnection((err, conn) => {
                         conn.execute(
                             'SELECT * FROM `user` WHERE `id` = ?',
                             [ payload.userId ],

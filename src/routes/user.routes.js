@@ -13,12 +13,12 @@ router.get('', userController.getAllUsers)
 router.get('/profile', authController.validateToken, userController.getUserProfile)
 
 // GET request to retrieve user by id (UC-204)
-router.get('/:userId', userController.getUser)
+router.get('/:userId', authController.validateTokenOptional, userController.getUser)
 
 // PUT request to overwrite user info by id (UC-205)
-router.put('/:userId', userController.updateUser)
+router.put('/:userId', authController.validateToken, userController.updateUser)
 
 // DELETE request to delete user by id (UC-206)
-router.delete('/:userId', userController.deleteUser)
+router.delete('/:userId', authController.validateToken, userController.deleteUser)
 
 module.exports = router

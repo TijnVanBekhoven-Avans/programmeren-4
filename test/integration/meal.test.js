@@ -30,7 +30,7 @@ describe('TC-30x Meal', function () {
                 conn.query('INSERT INTO `meal` (`id`, `name`, `description`, `price`, `dateTime`, `maxAmountOfParticipants`, `imageUrl`, cookId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [ 2, 'Pesto', 'Very nice pesto', 2.50, '2023-05-19T05:40:20.000Z', 5, 'https://www.eefkooktzo.nl/wp-content/uploads/2021/03/Pesto-maken.jpg', 3 ], (err, results, fields) => {})
 
             }
-            conn.release()
+            pool.releaseConnection(conn)
         })
 
         // Set tokens

@@ -1,5 +1,6 @@
 const assert = require('assert')
 const pool = require('../util/sql.database')
+const { convertToBoolean } = require('../util/utils')
 
 const userController = {
     registerUser: (req, res, next) => {
@@ -97,6 +98,7 @@ const userController = {
                             }
                         }
                     )
+                    pool.releaseConnection(conn)
                 }
             })
         } 
@@ -193,7 +195,13 @@ const userController = {
                             })
                         }
                         if (results) {
-                            // logger.info('Found', results.length, 'results')
+                            users = results
+
+                            for (let i = 0; i < users.length; i++) {
+                                users[i].password = undefined
+                                users[i].isActive = convertToBoolean(users[i].isActive)
+                            }
+
                             res.status(200).json({
                                 status: 200,
                                 message: 'Users successfully retrieved',
@@ -240,11 +248,13 @@ const userController = {
                     }
                 }
             )
+            pool.releaseConnection(conn)
         })
     },
 
     getUser: (req, res, next) => {
         let userId = req.params.userId
+        let loggedInUser = req.userId
 
         let sqlStatement = 'SELECT * FROM `user` WHERE `id` = ?'
         let params = [ userId ]
@@ -274,13 +284,36 @@ const userController = {
                                     }
                                 )
                             } else {
-                                res.status(200).json(
-                                    {
-                                        status: 200,
-                                        message: `User with id ${userId} has been found`,
-                                        data: results[0]
+                                let user = results[0]
+                                user.isActive = convertToBoolean(user.isActive)
+
+                                if (loggedInUser) {
+                                    if (loggedInUser) {
+                                        if (loggedInUser != userId) {
+                                            res.status(401).json(
+                                                {
+                                                    status: 401,
+                                                    message: 'Not authorised',
+                                                    data: {}
+                                                }
+                                            )
+                                        }
                                     }
-                                )
+                                } else {
+                                    user.password = undefined
+                                }
+
+                                try {
+                                    res.status(200).json(
+                                        {
+                                            status: 200,
+                                            message: `User with id ${userId} has been found`,
+                                            data: user
+                                        }
+                                    )
+                                } catch (err) {
+                                    console.log(err.message)
+                                }
                             }
                         } 
                     })
@@ -293,148 +326,161 @@ const userController = {
         let { firstName, lastName, street, city, emailAddress, password, phoneNumber } = req.body
         let sqlStatement = "UPDATE `user` SET `emailAddress` = ?"
         let params = [ emailAddress ]
+        let loggedInUser = req.userId
 
-        // Check if parameters are the right datatype and are valid
-        try {
-            assert(typeof emailAddress === 'string', 'emailAddress must be a string')
-            if (!validateEmailAddress(emailAddress)) {
-                throw new Error('EmailAddress is not formatted correctly')
-            }
-            if (firstName) {
-                assert(typeof firstName === 'string', 'firstName must be a string')
-                params[params.length] = firstName
-                sqlStatement = sqlStatement.concat(', `firstName` = ?')
-            }
-            if (lastName) {
-                assert(typeof lastName === 'string', 'lastName must be a string')
-                params[params.length] = lastName
-                sqlStatement = sqlStatement.concat(', `lastName` = ?')
-            }
-            if (street) {
-                assert(typeof street === 'string', 'street must be a string')
-                params[params.length] = street
-                sqlStatement = sqlStatement.concat(', `street` = ?')
-            }
-            if (city) {
-                assert(typeof city === 'string', 'city must be a string')
-                params[params.length] = city
-                sqlStatement = sqlStatement.concat(', `city` = ?')
-            }
-            if (password) {
-                assert(typeof password === 'string', 'password must be a string')
-                if (!validatePassword(password)) {
-                    throw new Error('Password is not formatted correctly')
+        // Check if emailAddress is present, if not throw error message
+        if (!emailAddress) {
+            res.status(400).json(
+                {
+                    status: 400,
+                    message: `The required parameter emailAddress is missing`,
+                    data: {}
                 }
-                params[params.length] = password
-                sqlStatement = sqlStatement.concat(', `password` = ?')
-            }
-            if (phoneNumber) {
-                assert(typeof phoneNumber === 'string', 'phoneNumber must be a string')
-                if (!validatePhoneNumber(phoneNumber)) {
-                    throw new Error('Phonenumber is not formatted correctly')
+            )
+        } else {
+            try { 
+                // Check if parameters are the right datatype and are valid
+                assert(typeof emailAddress === 'string', 'emailAddress must be a string')
+                if (!validateEmailAddress(emailAddress)) {
+                    throw new Error('EmailAddress is not formatted correctly')
                 }
-                params[params.length] = phoneNumber
-                sqlStatement = sqlStatement.concat(', `phoneNumber` = ?')
-            }
+                if (firstName) {
+                    assert(typeof firstName === 'string', 'firstName must be a string')
+                    params[params.length] = firstName
+                    sqlStatement = sqlStatement.concat(', `firstName` = ?')
+                }
+                if (lastName) {
+                    assert(typeof lastName === 'string', 'lastName must be a string')
+                    params[params.length] = lastName
+                    sqlStatement = sqlStatement.concat(', `lastName` = ?')
+                }
+                if (street) {
+                    assert(typeof street === 'string', 'street must be a string')
+                    params[params.length] = street
+                    sqlStatement = sqlStatement.concat(', `street` = ?')
+                }
+                if (city) {
+                    assert(typeof city === 'string', 'city must be a string')
+                    params[params.length] = city
+                    sqlStatement = sqlStatement.concat(', `city` = ?')
+                }
+                if (password) {
+                    assert(typeof password === 'string', 'password must be a string')
+                    if (!validatePassword(password)) {
+                        throw new Error('Password is not formatted correctly')
+                    }
+                    params[params.length] = password
+                    sqlStatement = sqlStatement.concat(', `password` = ?')
+                }
+                if (phoneNumber) {
+                    assert(typeof phoneNumber === 'string', 'phoneNumber must be a string')
+                    if (!validatePhoneNumber(phoneNumber)) {
+                        throw new Error('Phonenumber is not formatted correctly')
+                    }
+                    params[params.length] = phoneNumber
+                    sqlStatement = sqlStatement.concat(', `phoneNumber` = ?')
+                }
 
-            sqlStatement = sqlStatement.concat(' WHERE `id` = ?')
-            params[params.length] = userId
+                sqlStatement = sqlStatement.concat(' WHERE `id` = ?')
+                params[params.length] = userId
 
-            // Check if emailAddress is present, if not throw error message
-            if (!emailAddress) {
+                pool.getConnection(function (err, conn) {
+                    if (err) {
+                        console.log('error', err)
+                        next('error: ' + err.message)
+                    }
+                    if (conn) {
+                        conn.execute(
+                            'SELECT * FROM `user` WHERE id = ?',
+                            [ userId ],
+                            function (err, results, fields) {
+                                if (err) {
+                                    console.log(`Error: ${err.message}`)
+                                    next({
+                                        status: 409,
+                                        message: err.message
+                                    })
+                                }
+                                if (results.length > 0) {
+                                    if (userId == loggedInUser) {
+                                        conn.execute(
+                                            sqlStatement,
+                                            params,
+                                            function (err, results, fields) {
+                                                if (err) {
+                                                    console.log(`Error: ${err.message}`)
+                                                    next({
+                                                        status: 409,
+                                                        message: err.message
+                                                    })
+                                                }
+                                            }
+                                        )
+                                        conn.execute(
+                                            'SELECT * FROM `user` WHERE id = ?',
+                                            [ userId ],
+                                            function(err, results, fields) {
+                                                if (err) {
+                                                    console.log(`Error: ${err.message}`)
+                                                    next({
+                                                        status: 409,
+                                                        message: err.message
+                                                    })
+                                                }
+                                                if (results) {
+                                                    let user = results[0]
+                                                    user.isActive = convertToBoolean(user.isActive)
+
+                                                    res.status(200).json(
+                                                        {
+                                                            status: 200,
+                                                            message: `User with id ${userId} has been edited succesfully`,
+                                                            data: user
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    } else {
+                                        res.status(403).json({
+                                            status: 403,
+                                            message: 'Not authorised',
+                                            data: {}
+                                        })
+                                    }
+                                } 
+                                else {
+                                    res.status(404).json(
+                                        {
+                                            status: 404,
+                                            message: `User with id ${userId} has not been found`,
+                                            data: {}
+                                        }
+                                    )
+                                }
+                            }
+                        )
+                        pool.releaseConnection(conn)
+                    }
+                })
+            } 
+            catch (err) {
                 res.status(400).json(
                     {
                         status: 400,
-                        message: `The required parameter emailAddress is missing`,
+                        message: err.toString(),
                         data: {}
                     }
                 )
             }
-
-            pool.getConnection(function (err, conn) {
-                if (err) {
-                    console.log('error', err)
-                    next('error: ' + err.message)
-                }
-                if (conn) {
-                    conn.execute(
-                        'SELECT * FROM `user` WHERE id = ?',
-                        [ userId ],
-                        function (err, results, fields) {
-                            if (err) {
-                                console.log(`Error: ${err.message}`)
-                                next({
-                                    status: 409,
-                                    message: err.message
-                                })
-                            }
-                            if (results.length > 0) {
-                                conn.execute(
-                                    sqlStatement,
-                                    params,
-                                    function (err, results, fields) {
-                                        if (err) {
-                                            console.log(`Error: ${err.message}`)
-                                            next({
-                                                status: 409,
-                                                message: err.message
-                                            })
-                                        }
-                                    }
-                                )
-                                conn.execute(
-                                    'SELECT * FROM `user` WHERE id = ?',
-                                    [ userId ],
-                                    function(err, results, fields) {
-                                        if (err) {
-                                            console.log(`Error: ${err.message}`)
-                                            next({
-                                                status: 409,
-                                                message: err.message
-                                            })
-                                        }
-                                        if (results) {
-                                            res.status(200).json(
-                                                {
-                                                    status: 200,
-                                                    message: `User with id ${userId} has been edited succesfully`,
-                                                    data: results[0]
-                                                }
-                                            )
-                                        }
-                                    }
-                                )
-                            } 
-                            else {
-                                res.status(404).json(
-                                    {
-                                        status: 404,
-                                        message: `User with id ${userId} has not been found`,
-                                        data: {}
-                                    }
-                                )
-                            }
-                        }
-                    )
-                }
-            })
-        } 
-        catch (err) {
-            res.status(400).json(
-                {
-                    status: 400,
-                    message: err.toString(),
-                    data: {}
-                }
-            )
         }
-        
     },
 
     deleteUser: (req, res, next) => {
         let userId = req.params.userId
         let sqlStatement = 'DELETE FROM `user` WHERE `id` = ?'
         let params = [ userId ]
+        let loggedInUser = req.userId
 
         pool.getConnection(function (err, conn) {
             if (err) {
@@ -454,35 +500,33 @@ const userController = {
                         }
                         if (results) {
                             if (results.length > 0) {
-                                pool.getConnection(function (err, conn) {
-                                    if (err) {
-                                        console.log(`Error: ${err.message}`)
-                                    }
-                                    if (conn) {
-                                        conn.execute(sqlStatement,
-                                        params,
-                                        function (err, results, fields) {
-                                            if (err) {
-                                                console.log(`Error: ${err.message}`)
-                                                next({
-                                                    status: 409,
-                                                    message: err.message
-                                                })
-                                            }
-                                            if (results) {
-                                                res.status(200).json(
-                                                    {
-                                                        status: 200,
-                                                        message: `User with id ${userId} has been deleted`,
-                                                        data: {}
-                                                    }
-                                                )
-                                            } else {
-                                                
-                                            }
-                                        })
-                                    }
-                                })
+                                if (loggedInUser == userId) {
+                                    conn.execute(sqlStatement,
+                                    params,
+                                    function (err, results, fields) {
+                                        if (err) {
+                                            console.log(`Error: ${err.message}`)
+                                            next({
+                                                status: 409,
+                                                message: err.message
+                                            })
+                                        }
+                                        if (results) {
+                                            res.status(200).json(
+                                                {
+                                                    status: 200,
+                                                    message: `User with id ${userId} has been deleted`,
+                                                    data: {}
+                                                }
+                                            )
+                                        }
+                                    })
+                                } else {
+                                    next({
+                                        code: 403,
+                                        message: 'Not authorised'
+                                    })
+                                }
                             } else {
                                 res.status(404).json(
                                     {
@@ -495,6 +539,7 @@ const userController = {
                         }
                     }
                 )
+                pool.releaseConnection(conn)
             }
         })
     }
